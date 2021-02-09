@@ -186,17 +186,27 @@ int rainbow_verify( const uint8_t * digest , const uint8_t * signature , const p
 }
 
 
-int rainbow_sign_ring(const uint8_t * digest , const uint8_t ** signature , const pk_t * pk, unsigned char* digest_ck ){
+int rainbow_sign_ring(const uint8_t * digest , const uint8_t * signature , const pk_t * pk, unsigned char* digest_ck ){
     unsigned char digest_ck_result[_PUB_M_BYTE];
     batch_quad_trimat_eval( digest_ck_result , pk->pk , signature , _PUB_N , _PUB_M_BYTE );
-    printf("Here:\n");
+    // printf("Here:\n");
     for (int i = 0; i < _PUB_M_BYTE; i++){
-        printf("%d ", digest_ck[i]);
-        digest_ck[i]+=digest_ck_result[i];
-        printf("%d,", digest_ck[i]);
+        digest_ck[i] = digest_ck_result[i];
     }
 
-    printf("\n");
+    // printf("\n");
+    // printf("Result of Rainbow: \n");
+
+    // for (int i = 0; i < _PUB_M_BYTE; i++){
+        // printf("%d ", digest_ck_result[i]);
+    // }
+
+    // printf("\n");
+    // printf("Vector: \n");
+    // for (int i = 0; i < _PUB_M_BYTE; i++){
+        //  printf("%d ,", signature[i]);
+    // }
+    // printf("\n");
     return 1;
 }
 

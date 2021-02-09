@@ -48,7 +48,7 @@ SRCS_O_ND = $(subst $(PROJ_DIR)/,,$(SRCS_O))
 
 OBJ = $(SRCS_O_ND)
 
-EXE= rainbow-genkey rainbow-sign rainbow-verify PQCgenKAT_sign rainbow-ring-sign
+EXE= rainbow-genkey rainbow-sign rainbow-verify PQCgenKAT_sign rainbow-ring-sign rainbow-ring-verify
 
 
 CSRC= $(wildcard *.c)
@@ -87,6 +87,12 @@ rainbow-verify: $(OBJ) rainbow-verify.o
 
 PQCgenKAT_sign: $(OBJ) PQCgenKAT_sign.o
 	$(LD) $(LDFLAGS) $(LIBPATH) -o $@ $^ $(LIBS)
+	
+rainbow-ring-sign: $(OBJ) rainbow-ring-sign.o
+	$(LD) $(LDFLAGS) $(LIBPATH) -o $@ $^ $(LIBS)
+	
+rainbow-ring-verify: $(OBJ) rainbow-ring-verify.o
+	$(LD) $(LDFLAGS) $(LIBPATH) -o $@ $^ $(LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCPATH) -c $<
@@ -95,4 +101,4 @@ PQCgenKAT_sign: $(OBJ) PQCgenKAT_sign.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $<
 
 clean:
-	rm *.o *-test *-benchmark rainbow-genkey rainbow-sign rainbow-verify rainbow-ring-sign PQCgenKAT_sign;
+	rm *.o *-test *-benchmark rainbow-genkey rainbow-sign rainbow-verify rainbow-ring-sign rainbow-ring-verify PQCgenKAT_sign;

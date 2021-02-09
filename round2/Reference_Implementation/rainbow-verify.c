@@ -21,12 +21,13 @@ int main( int argc , char ** argv )
         printf("hash size: %d\n", _HASH_LEN );
         printf("signature size: %d\n\n", CRYPTO_BYTES );
 
-	if( 4 != argc ) {
+	if( 5 != argc ) {
                 printf("Usage:\n\n\trainbow-verify pk_file_name signature_file_name message_file_name\n\n");
                 return -1;
         }
 
 	uint8_t * pk = (uint8_t *) malloc( CRYPTO_PUBLICKEYBYTES );
+	uint8_t *_sk = (uint8_t*)malloc( CRYPTO_SECRETKEYBYTES );
 
 	FILE * fp;
 	int r;
@@ -69,11 +70,23 @@ int main( int argc , char ** argv )
 		return -1;
 	}
 
+	fp = fopen( argv[4] , "r");
+	if( NULL == fp ) {
+		printf("fail to open secret key file.\n");
+		return -1;
+	}
+	r = byte_fget( fp ,  _sk , CRYPTO_SECRETKEYBYTES );
+	fclose( fp );
+	if( CRYPTO_SECRETKEYBYTES != r ) {
+		printf("fail to load key file.\n");
+		return -1;
+	}
+
 	r = crypto_sign_open( msg , &mlen , signature , mlen + CRYPTO_BYTES , pk );
 
 
 	int row = 2;
-	int col = 64;
+	int col = 48;
 	unsigned char *ptr;
 	unsigned char **vector = (unsigned char **)malloc(row * col * sizeof(char) + sizeof(char *) * row);
     srand(2);
@@ -93,7 +106,7 @@ int main( int argc , char ** argv )
 
 	for (i = 0; i < row; i++){
 		for (j = 0;j < col; j++){
-			printf("%c ", vector[i][j]);
+			printf("%d ", vector[i][j]);
 		}
 		printf("\n");
 	}
@@ -109,13 +122,14 @@ int main( int argc , char ** argv )
     printf("size: %ld \n", sizeof(vector));
     printf("size of signature: %ld \n", CRYPTO_BYTES);
 
-	int z = crypto_sign_ring(pk, vector, msg, mlen);
+	int z = crypto_sign_ring(pk, vector, msg, mlen, _sk);
 	printf("%d \n", z);
 
 
 	free( msg );
 	free( signature );
 	free( pk );
+	free(_sk);
 
 	if( 0 == r ) {
 		printf("Correctly verified.\n" );
