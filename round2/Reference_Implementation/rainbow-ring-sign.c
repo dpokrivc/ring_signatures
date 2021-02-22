@@ -28,36 +28,59 @@ int main( int argc , char ** argv )
                 return -1;
         }
 
+    int users = atoi(argv[3]);
 	uint8_t * pk = (uint8_t *) malloc( CRYPTO_PUBLICKEYBYTES );
-	uint8_t * pk_1 = (uint8_t *) malloc( CRYPTO_PUBLICKEYBYTES );
+	// uint8_t * pk_1 = (uint8_t *) malloc( CRYPTO_PUBLICKEYBYTES );
 	uint8_t *_sk = (uint8_t*)malloc( CRYPTO_SECRETKEYBYTES );
+	uint8_t *ptrx;
+    uint8_t **pks = (uint8_t **)malloc(users * CRYPTO_PUBLICKEYBYTES * sizeof(uint8_t) + sizeof(uint8_t *) * users);;
+
+	ptrx = (uint8_t *)(pks + users);
+
+	int k;
+	for (k = 0; k < users; k++){
+		pks[k] = (ptrx + CRYPTO_PUBLICKEYBYTES *k);
+	}
 
 	FILE * fp;
 	int r;
 
-	fp = fopen( "pk" , "r");
-	if( NULL == fp ) {
-		printf("fail to open public key file.\n");
-		return -1;
-	}
-	r = byte_fget( fp ,  pk , CRYPTO_PUBLICKEYBYTES );
-	fclose( fp );
-	if( CRYPTO_PUBLICKEYBYTES != r ) {
-		printf("fail to load key file.\n");
-		return -1;
-	}
+    char x[4];
+   
 
-	fp = fopen( "pk1" , "r");
-	if( NULL == fp ) {
-		printf("fail to open public key file.\n");
-		return -1;
-	}
-	r = byte_fget( fp ,  pk_1 , CRYPTO_PUBLICKEYBYTES );
-	fclose( fp );
-	if( CRYPTO_PUBLICKEYBYTES != r ) {
-		printf("fail to load key file.\n");
-		return -1;
-	}
+    strcat(x, "pk");
+
+    for (int i = 0; i < users; i++){
+		char *c = (char *) malloc(1);
+        if (i == 0){
+            // printf("Here\n");
+            fp = fopen("pk", "r");
+        } else {
+            sprintf(c, "%d", i);
+            x[2] = c[0];
+
+            fp = fopen(x, "r");
+        }
+
+        if( NULL == fp ) {
+		    printf("fail to open public key file.\n");
+		    return -1;
+        }
+        r = byte_fget( fp ,  pk , CRYPTO_PUBLICKEYBYTES );
+	    fclose( fp );
+	    if( CRYPTO_PUBLICKEYBYTES != r ) {
+		    printf("fail to load key file.\n");
+		    return -1;
+	    }
+
+		int a;
+        for (a = 0; a < CRYPTO_PUBLICKEYBYTES; a++){
+            pks[i][a] = pk[a];
+        }
+		// printf("%2x ", pks[0][0]);
+        // free(pk);
+		free(c);
+    }
 
 	unsigned char * msg = NULL;
 	unsigned long long mlen = 0;
@@ -79,8 +102,6 @@ int main( int argc , char ** argv )
 		return -1;
 	}
 
-    int users = atoi(argv[3]);
-
 	int row = users;
 	int col =  CRYPTO_BYTES + _PUB_M_BYTE; //48
 	unsigned char *ptr;
@@ -94,32 +115,14 @@ int main( int argc , char ** argv )
 		vector[i] = (ptr + col *i);
 	}
 
-	for (i = 0;i < row; i++){
+	for (i = 1;i < row; i++){
 		for (j = 0; j < col;j++){
 			vector[i][j] = rand();
 		}
 	}
 
-	// for (i = 0; i < row; i++){
-	// 	for (j = 0;j < col; j++){
-	// 		printf("%d ", vector[i][j]);
-	// 	}
-	// 	printf("\n");
-	// }
 
-    uint8_t *pks[] = {pk, pk_1};
-
-	// for (i = 0; i < row; i++){
-	// 	for (j = 0; j < col; j++){
-	// 		printf("%c ", *(vector + i*col + j));
-	// 	}
-	// 	printf("\n");
-	// }
-
-    // printf("size: %ld \n", sizeof(vector));
-    // printf("size of signature: %ld \n", CRYPTO_BYTES);
-
-	int z = crypto_sign_ring(pks, vector, msg, mlen, _sk);
+	int z = crypto_sign_ring(pks, vector, msg, mlen, _sk, users);
 	// printf("%d \n", z);
 
 	if( 0 != z ) {
@@ -127,15 +130,14 @@ int main( int argc , char ** argv )
 		return -1;
 	}
 
-    byte_fdump( stdout , CRYPTO_ALGNAME " signature"  , vector[0], CRYPTO_BYTES + _PUB_M_BYTE);
-	printf("\n");
-    byte_fdump( stdout , CRYPTO_ALGNAME " signature"  , vector[1], CRYPTO_BYTES + _PUB_M_BYTE);
-	printf("\n");
+	int l;
+	for(l = 0; l < users; l++){
+		byte_fdump( stdout , CRYPTO_ALGNAME " signature"  , vector[l], CRYPTO_BYTES + _PUB_M_BYTE);
+		printf("\n");
+	}
 
     free( msg );
-	// free( signature );
 	free( pk );
-	free( pk_1 );
 	free(_sk);
     free(vector);
 

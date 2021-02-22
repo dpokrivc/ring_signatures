@@ -21,9 +21,9 @@
 
 #if defined _RAINBOW16_32_32_32
 #define _GFSIZE 256
-#define _V1 16
-#define _O1 17
-#define _O2 15
+#define _V1 30
+#define _O1 64
+#define _O2 58
 #define _HASH_LEN 32
 
 #elif defined _RAINBOW256_68_36_36

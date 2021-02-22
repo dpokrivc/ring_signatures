@@ -54,7 +54,7 @@ int rainbow_sign_cyclic( uint8_t * signature , const csk_t * sk , const uint8_t 
 ///
 int rainbow_verify_cyclic( const uint8_t * digest , const uint8_t * signature , const cpk_t * pk );
 
-int rainbow_sign_ring(const uint8_t * digest , const uint8_t * signature , const pk_t * pk, unsigned char * digest_ck); 
+int rainbow_sign_ring(uint8_t * digest , const uint8_t * signature , const pk_t * pk, unsigned char * digest_ck); 
 
 
 

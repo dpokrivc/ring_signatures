@@ -60,8 +60,7 @@ int main( int argc , char ** argv )
 		printf("fail to open secret key file.\n");
 		return -1;
 	}
-	//ptr = (unsigned char *)&sk;
-	//sprintf(msg,"%s secret key", name);
+
 	byte_fdump( fp ,  CRYPTO_ALGNAME " secret key" , _sk , CRYPTO_SECRETKEYBYTES );
 
 	fclose( fp );

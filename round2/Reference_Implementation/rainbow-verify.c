@@ -122,7 +122,7 @@ int main( int argc , char ** argv )
     printf("size: %ld \n", sizeof(vector));
     printf("size of signature: %ld \n", CRYPTO_BYTES);
 
-	int z = crypto_sign_ring(pk, vector, msg, mlen, _sk);
+	int z = crypto_sign_ring(pk, vector, msg, mlen, _sk, 2);
 	printf("%d \n", z);
 
 

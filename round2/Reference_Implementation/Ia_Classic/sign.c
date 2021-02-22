@@ -114,7 +114,7 @@ error here
 }
 
 
-int crypto_sign_ring(const unsigned char **pk, unsigned char **vector, unsigned char *m, unsigned long long mlen, const unsigned char *sk) {
+int crypto_sign_ring(const unsigned char **pk, unsigned char **vector, unsigned char *m, unsigned long long mlen, const unsigned char *sk, const int users) {
 
 	// if( _SIGNATURE_BYTE > smlen ) return -1;
 	// memcpy( m , sm , smlen-_SIGNATURE_BYTE );
@@ -131,13 +131,24 @@ int crypto_sign_ring(const unsigned char **pk, unsigned char **vector, unsigned 
 	
 	unsigned char digest_ck[_PUB_M_BYTE];
 	unsigned char w_with_vawe[_PUB_M_BYTE];
+	unsigned char result[_PUB_M_BYTE];
+	for (int i = 0; i< _PUB_M_BYTE;i++){
+		result[i] = 0;
+	}
 	//we need to supply for different public keys
-	rainbow_sign_ring( digest , vector[0] , (const pk_t *)pk[1], digest_ck);
+	for (int h = 1; h < users; h++){
+		rainbow_sign_ring( result , vector[h] , (const pk_t *)pk[h], digest_ck);
+		// for (int i = 0; i< _PUB_M_BYTE;i++){
+		// 	printf("%d ", result[i]);
+		// }
+	}
 
-	printf("W with vawe: \n");
+	// rainbow_sign_ring( result , vector[0] , (const pk_t *)pk[1], digest_ck);
+
+	// printf("W with vawe: \n");
 	for (int i = 0; i < _PUB_M_BYTE ;i++){
-		w_with_vawe[i] = digest[i] - digest_ck[i];
-		printf("%d ", w_with_vawe[i]);
+		w_with_vawe[i] = digest[i] - result[i];
+		// printf("%d ", w_with_vawe[i]);
 	}
 	// printf("\n");
 	unsigned char * signature = malloc( CRYPTO_BYTES + _PUB_M_BYTE );
@@ -166,7 +177,7 @@ int crypto_sign_ring(const unsigned char **pk, unsigned char **vector, unsigned 
 
 	// printf("Correct signature: \n");
 	for (int i = 0; i < CRYPTO_BYTES + _PUB_M_BYTE ;i++){
-		vector[1][i] = signature[i];
+		vector[0][i] = signature[i];
 		// printf("%d ", vector[1][i]);
 	}
 
@@ -175,7 +186,7 @@ int crypto_sign_ring(const unsigned char **pk, unsigned char **vector, unsigned 
 	// return rainbow_verify_ring(pk, vector, m, &mlen, mlen + CRYPTO_BYTES);
 }
 
-int rainbow_verify_ring(const unsigned char **pk, const unsigned char **signature, unsigned char *m, unsigned long long *mlen, unsigned long long smlen) {
+int rainbow_verify_ring(const unsigned char **pk, const unsigned char **signature, unsigned char *m, unsigned long long *mlen, unsigned long long smlen, const int users) {
 	// if( _SIGNATURE_BYTE > smlen ) return -1;
 	// memcpy( m , signature[0] , smlen-_SIGNATURE_BYTE );
 	// mlen[0] = smlen-_SIGNATURE_BYTE;
@@ -188,11 +199,19 @@ int rainbow_verify_ring(const unsigned char **pk, const unsigned char **signatur
 	unsigned long long w_len = _PUB_M_BYTE;
 	unsigned long long smlen1 = w_len + CRYPTO_BYTES;
 
+	// unsigned char result[_PUB_M_BYTE];
+	for (int i = 0; i< _PUB_M_BYTE;i++){
+		result[i] = 0;
+	}
 
-	rainbow_sign_ring( digest , signature[0] , (const pk_t *)pk[1], digest_ck);
+	int j;
+	for (j = 1; j < users; j ++){
+		rainbow_sign_ring( result , signature[j] , (const pk_t *)pk[j], digest_ck);
+	}
+ 
 	printf("Digest_ck: \n");
 	for (int i = 0; i < _PUB_M_BYTE ;i++){
-		printf("%d ", signature[0][i]);
+		printf("%d ", signature[1][i]);
 	}
 
 	// for (int i = 0; i < _PUB_M_BYTE; i++){
@@ -204,22 +223,22 @@ int rainbow_verify_ring(const unsigned char **pk, const unsigned char **signatur
 	unsigned char w_with_vawe[_PUB_M_BYTE];
 	printf("W with vawe: \n");
 	for (int i = 0; i < _PUB_M_BYTE ;i++){
-		w_with_vawe[i] = digest[i] - digest_ck[i];
+		w_with_vawe[i] = digest[i] - result[i];
 		printf("%d ", w_with_vawe[i]);
 	}
 	
-	memcpy( w_with_vawe , signature[1] , smlen1-_SIGNATURE_BYTE );
+	memcpy( w_with_vawe , signature[0] , smlen1-_SIGNATURE_BYTE );
 	// &w_len[0] = smlen1-_SIGNATURE_BYTE;
 
 	unsigned char digest_w[_HASH_LEN];
 	hash_msg( digest_w , _HASH_LEN , w_with_vawe , w_len);
 
-	rainbow_sign_ring( digest , signature[1] + w_len, (const pk_t *)pk[0], digest_ck1);
+	rainbow_sign_ring( result , signature[0] + w_len, (const pk_t *)pk[0], digest_ck1);
 
 	unsigned char correct[_PUB_M_BYTE];
     unsigned char digest_salt[_HASH_LEN + _SALT_BYTE];
     memcpy( digest_salt , digest_w , _HASH_LEN );
-    memcpy( digest_salt+_HASH_LEN , signature[1] + w_len +_PUB_N_BYTE , _SALT_BYTE );
+    memcpy( digest_salt+_HASH_LEN , signature[0] + w_len +_PUB_N_BYTE , _SALT_BYTE );
     hash_msg( correct , _PUB_M_BYTE , digest_salt , _HASH_LEN+_SALT_BYTE );  // H( digest || salt )
 
 	printf("Correct: \n");
